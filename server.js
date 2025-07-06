@@ -1,4 +1,5 @@
 // ✅ Full server.js backend for OwnMic website
+// ✅ Full server.js backend for OwnMic website
 const express = require("express");
 const bodyParser = require("body-parser");
 const fs = require("fs");
@@ -37,7 +38,7 @@ function saveJSON(filePath, data) {
 // 📥 Signup
 app.post("/api/signup", (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) return res.status(400).send("Missing email or password");
+  if (!email || !password) return res.status(400).json({ success: false, message: "Missing email or password" });
 
   const users = loadJSON(USERS_FILE);
   if (users[email]) return res.status(409).json({ success: false, message: "User already exists" });
@@ -48,7 +49,7 @@ app.post("/api/signup", (req, res) => {
   saveJSON(OTP_FILE, otpStore);
   sendOtp(email, otp);
 
-  res.status(200).send("OTP sent");
+  res.status(200).json({ success: true, message: "OTP sent" });
 });
 
 // 🔐 Verify OTP
