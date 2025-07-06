@@ -37,8 +37,11 @@ function saveJSON(filePath, data) {
 // 📥 Signup
 app.post("/api/signup", (req, res) => {
   const { email, password } = req.body;
+  if (!email || !password) return res.status(400).send("Missing email or password");
+
   const users = loadJSON(USERS_FILE);
   if (users[email]) return res.status(409).json({ success: false, message: "User already exists" });
+
   const otp = Math.floor(100000 + Math.random() * 900000);
   const otpStore = loadJSON(OTP_FILE);
   otpStore[email] = { otp, password: hashPassword(password) };
@@ -51,9 +54,13 @@ app.post("/api/signup", (req, res) => {
 // 🔐 Verify OTP
 app.post("/api/verify", (req, res) => {
   const { email, otp, username } = req.body;
+
   const otpStore = loadJSON(OTP_FILE);
   const users = loadJSON(USERS_FILE);
-  if (!otpStore[email] || otpStore[email].otp != otp) return res.status(400).json({ success: false, message: "Invalid OTP" });
+
+  if (!otpStore[email] || otpStore[email].otp != otp) {
+    return res.status(400).json({ success: false, message: "Invalid OTP" });
+  }
 
   users[email] = {
     username,
@@ -71,11 +78,12 @@ app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
   const users = loadJSON(USERS_FILE);
   const user = users[email];
-  if (!user || user.password !== hashPassword(password)) return res.status(401).json({ success: false, message: "Invalid credentials" });
+  if (!user || user.password !== hashPassword(password)) {
+    return res.status(401).json({ success: false, message: "Invalid credentials" });
+  }
+
   res.status(200).json({ success: true, user: { username: user.username } });
 });
-
-// 🚪 Logout handled on frontend (just clear localStorage)
 
 // 🚀 Server start
 const PORT = process.env.PORT || 3000;
