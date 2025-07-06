@@ -15,6 +15,7 @@ function toggleMenu(icon) {
 function handleLike() {
   const isLoggedIn = localStorage.getItem("userLoggedIn");
   if (!isLoggedIn) {
+    alert("Please login to like!");
     window.location.href = "login.html";
   } else {
     let countElement = document.getElementById("likeCount");
@@ -25,15 +26,14 @@ function handleLike() {
   }
 }
 
+// ✅ Remove auto-redirect on page load
 window.onload = function () {
   let countElement = document.getElementById("likeCount");
   let count = localStorage.getItem("likeCount") || "104000";
   countElement.innerText = count >= 1000 ? (count / 1000).toFixed(1) + "k" : count;
 
-  if (!localStorage.getItem("userLoggedIn")) {
-    window.location.href = "login.html";
-  }
-}
+  // ❌ No redirect to login here — allow page to load freely
+};
 
 function logoutUser() {
   localStorage.removeItem("userLoggedIn");
@@ -41,4 +41,15 @@ function logoutUser() {
   window.location.href = "login.html";
 }
 
-
+// ✅ Optional: For feedback form protection
+const feedbackForm = document.getElementById("feedbackForm");
+if (feedbackForm) {
+  feedbackForm.addEventListener("submit", (e) => {
+    const isLoggedIn = localStorage.getItem("userLoggedIn");
+    if (!isLoggedIn) {
+      e.preventDefault();
+      alert("Please login to submit feedback.");
+      window.location.href = "login.html";
+    }
+  });
+}
