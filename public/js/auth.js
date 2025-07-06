@@ -25,16 +25,19 @@ if (signupForm) {
         body: JSON.stringify(data),
       });
 
-      const result = await res.json();
+      const text = await res.text();
 
-      if (result.success) {
+      if (res.ok) {
         localStorage.setItem("tempUser", data.username);
+        localStorage.setItem("email", data.email);
+        localStorage.setItem("password", data.password);
         showAlert("OTP sent to your email!");
         window.location.href = "otp.html";
       } else {
-        showAlert(result.message || "Signup failed");
+        showAlert(text || "Signup failed");
       }
     } catch (err) {
+      console.error("Signup error:", err);
       showAlert("Something went wrong");
     }
   });
@@ -47,7 +50,7 @@ if (loginForm) {
     e.preventDefault();
 
     const data = {
-      username: loginForm.username.value,
+      email: loginForm.email.value,
       password: loginForm.password.value,
     };
 
@@ -80,20 +83,23 @@ if (otpForm) {
   otpForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    const email = localStorage.getItem("email");
     const username = localStorage.getItem("tempUser");
     const otp = otpForm.otp.value;
 
     try {
-      const res = await fetch("/api/verify-otp", {
+      const res = await fetch("/api/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, otp }),
+        body: JSON.stringify({ email, username, otp }),
       });
 
       const result = await res.json();
 
       if (result.success) {
         localStorage.removeItem("tempUser");
+        localStorage.removeItem("email");
+        localStorage.removeItem("password");
         showAlert("Account verified successfully!");
         window.location.href = "login.html";
       } else {
@@ -107,23 +113,19 @@ if (otpForm) {
 
 // ===== Resend OTP =====
 function resendOTP() {
-  const username = localStorage.getItem("tempUser");
-  if (!username) return showAlert("No user found");
+  const email = localStorage.getItem("email");
+  const password = localStorage.getItem("password");
 
-  fetch("/api/resend-otp", {
+  if (!email || !password) return showAlert("Missing email or password");
+
+  fetch("/api/signup", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username }),
+    body: JSON.stringify({ email, password }),
   })
-    .then((res) => res.json())
-    .then((result) => {
-      if (result.success) {
-        showAlert("OTP resent!");
-      } else {
-        showAlert(result.message);
-      }
-    })
+    .then((res) => res.text())
+    .then(() => showAlert("OTP resent!"))
     .catch(() => {
       showAlert("Failed to resend OTP");
     });
-}
+    }
